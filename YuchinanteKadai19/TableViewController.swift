@@ -1,9 +1,9 @@
 //
 //  TableViewController.swift
 //  YuchinanteKadai19
-//  
+//
 //  Created by Yuchinante on 2024/06/27
-//  
+//
 //
 
 import UIKit
@@ -11,7 +11,7 @@ import UIKit
 class TableViewController: UITableViewController {
 
     // アイテムの構造体を定義
-    struct Item {
+    struct Item: Codable {
         var name: String
         var isChecked: Bool
 
@@ -24,19 +24,16 @@ class TableViewController: UITableViewController {
     private var editIndexPath: IndexPath?
 
     // アイテムの配列を保持するプロパティ
-    private var items: [Item] = []
+    private var items: [Item] = [] {
+        didSet {
+            saveItems()
+        }
+    }
 
     // 画面がロードされた時の処理
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        // アイテムの初期化
-        items = [
-            Item(name: "りんご", isChecked: false),
-            Item(name: "みかん", isChecked: true),
-            Item(name: "バナナ", isChecked: false),
-            Item(name: "パイナップル", isChecked: true)
-        ]
+        loadItems()
     }
 
     // セルの数を返すメソッド
@@ -65,7 +62,7 @@ class TableViewController: UITableViewController {
     }
 
     // アクセサリボタンがタップされた時の処理
-    override  func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath) {
+    override func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath) {
         // 編集対象のセルのインデックスパスを保持する
         editIndexPath = indexPath
         // 編集画面に遷移する
@@ -76,7 +73,7 @@ class TableViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
             // アイテムを削除する
-            self.items.remove(at: indexPath.row)
+            items.remove(at: indexPath.row)
             // テーブルビューの行を削除する
             tableView.deleteRows(at: [indexPath], with: .automatic)
         }
@@ -92,7 +89,7 @@ class TableViewController: UITableViewController {
             case "EditSegue":
                 // 編集モードを設定する
                 if let indexPath = sender as? IndexPath {
-                    let item = self.items[indexPath.row]
+                    let item = items[indexPath.row]
                     // 編集対象のアイテム名を渡す
                     add.mode = .edit(item)
                 }
@@ -105,11 +102,12 @@ class TableViewController: UITableViewController {
     // 追加モードを押されたときのボタン
     @IBAction func exitFromAddByCancel(segue: UIStoryboardSegue) {
     }
+
     @IBAction func exitFromAddBySave(segue: UIStoryboardSegue) {
         if let add = segue.source as? AddItemViewController {
             // アイテム名を追加する
             guard let item = add.editedItem else { return }
-            items .append(item)
+            items.append(item)
             let indexPath = IndexPath(row: items.count - 1, section: 0)
             // テーブルビューに行を追加する
             tableView.insertRows(at: [indexPath], with: .automatic)
@@ -119,6 +117,7 @@ class TableViewController: UITableViewController {
     // 編集モードを押されたときのボタン
     @IBAction func exitFromEditByCancel(segue: UIStoryboardSegue) {
     }
+
     @IBAction func exitFromEditBySave(segue: UIStoryboardSegue) {
         if let add = segue.source as? AddItemViewController {
             if let indexPath = editIndexPath {
@@ -128,6 +127,23 @@ class TableViewController: UITableViewController {
                 // テーブルビューの行を再読み込みする
                 tableView.reloadRows(at: [indexPath], with: .automatic)
             }
+        }
+    }
+
+    // UserDefaultsにアイテムを保存する
+    private func saveItems() {
+        let defaults = UserDefaults.standard
+        if let data = try? JSONEncoder().encode(items) {
+            defaults.set(data, forKey: "items")
+        }
+    }
+
+    // UserDefaultsからアイテムを読み込む
+    private func loadItems() {
+        let defaults = UserDefaults.standard
+        if let data = defaults.data(forKey: "items"),
+           let savedItems = try? JSONDecoder().decode([Item].self, from: data) {
+            items = savedItems
         }
     }
 }
