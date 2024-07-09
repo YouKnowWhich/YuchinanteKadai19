@@ -5,11 +5,8 @@
 //  Created by Yuchinante on 2024/06/27
 //
 //
-
 import UIKit
-
 class TableViewController: UITableViewController {
-
     // アイテムの構造体を定義
     struct Item: Codable {
         var name: String
