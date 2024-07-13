@@ -7,6 +7,8 @@
 //
 import UIKit
 class TableViewController: UITableViewController {
+    private let keyItems = "items"
+
     // アイテムの構造体を定義
     struct Item: Codable {
         var name: String
@@ -131,14 +133,14 @@ class TableViewController: UITableViewController {
     private func saveItems() {
         let defaults = UserDefaults.standard
         if let data = try? JSONEncoder().encode(items) {
-            defaults.set(data, forKey: "items")
+            defaults.set(data, forKey: keyItems)
         }
     }
 
     // UserDefaultsからアイテムを読み込む
     private func loadItems() {
         let defaults = UserDefaults.standard
-        if let data = defaults.data(forKey: "items"),
+        if let data = defaults.data(forKey: keyItems),
            let savedItems = try? JSONDecoder().decode([Item].self, from: data) {
             items = savedItems
         }
